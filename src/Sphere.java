@@ -35,7 +35,7 @@ public class Sphere extends SketchBase {
 				y = (float)center.y + radius*cosu*sinv;
 				z = (float)center.z + radius*sinu;
 				mesh.coordinates[i][j] = new Vector3D(x, y, z);
-				mesh.normal[i][j] = new Vector3D(x-(float)center.x, y-(float)center.y, z-(float)center.z);
+				mesh.normal[i][j] = new Vector3D(cosu*cosv, cosu*sinv, sinu);
 				mesh.normal[i][j].normalize();
 				anglev += anglevStep;
 				cosv = (float)Math.cos(anglev);

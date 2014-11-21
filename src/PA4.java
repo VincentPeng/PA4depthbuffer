@@ -37,9 +37,9 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 	private int last_x = 0;
 	private int last_y = 0;
 	boolean rotate_world;
-	
+	private int nstep = 64;
 	private Light light;
-	
+	private int sphereNs=5;
 	private Vector3D viewing_center = new Vector3D((float)(DEFAULT_WINDOW_WIDTH/2),(float)(DEFAULT_WINDOW_HEIGHT/2),(float)0.0);
 	private static final Vector3D viewingVec = new Vector3D(0, 0, 1);
 
@@ -47,6 +47,7 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 
 	
 	Sphere sphere;
+	private boolean doSmoothShading = true;
 	public PA4() {
 		capabilities = new GLCapabilities(null);
 		capabilities.setDoubleBuffered(true);
@@ -69,7 +70,7 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setVisible(true);
 		
-		light = new InfiniteLight(0, 1, 1, new ColorType(1, 1, 1));
+		light = new InfiniteLight(0, 0, 1, new ColorType(1, 1, 1));
 	}
 
 	public void run() {
@@ -167,6 +168,33 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 			}.start();
 			System.exit(0);
 			break;
+		case 'S' :
+	    case 's' :
+	    	doSmoothShading  = !doSmoothShading;
+		case '+':
+		case '=':
+			sphereNs++;
+			System.out.println("sphereNs="+sphereNs);
+			break;
+		case '-':
+		case '_':
+			if(sphereNs>0) {
+				sphereNs--;
+			}
+			System.out.println("sphereNs="+sphereNs);
+			break;
+		case '>':
+			if(nstep<128)
+			nstep *= 2;
+			System.out.println("nstep="+nstep);
+			break;
+		case '<':
+			if(nstep>8)
+				nstep /= 2;
+			System.out.println("nstep="+nstep);
+			break;
+		default :
+	        break;
 		}
 	}
 
@@ -212,8 +240,8 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 	    clearPixelBuffer();
 	    drawShade();
 	    gl.glDrawPixels (buffer.getWidth(), buffer.getHeight(),
-      GL2.GL_BGR, GL2.GL_UNSIGNED_BYTE,
-      ByteBuffer.wrap(data));
+	      GL2.GL_BGR, GL2.GL_UNSIGNED_BYTE,
+	      ByteBuffer.wrap(data));
 	}
 	
 	void clearPixelBuffer()
@@ -245,16 +273,16 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 	}
 
 	private void createSolid() {
-		ColorType torusKa = new ColorType(0.0,0.0,0.0);
-        ColorType sphereKa = new ColorType(0.0,0.0,0.0);
-        ColorType torusKd = new ColorType(0.0,0.5,0.9);
-        ColorType sphereKd = new ColorType(0.5,0.0,0.5);
-        ColorType torusKs = new ColorType(1.0,1.0,1.0);
-        ColorType sphereKs = new ColorType(1.0,1.0,1.0);
-        int sphereNs = 5;
-        int torusNs = 5;
-		Material sphereMaterial = new Material(sphereKa, sphereKd, sphereKs, sphereNs);
-		sphere = new Sphere(new Point3D(500, 200, 0), 100, sphereMaterial, 40, 40);
+//		ColorType torusKa = new ColorType(0.0,0.0,0.0);
+//        ColorType sphereKa = new ColorType(0.0,0.0,0.0);
+//        ColorType torusKd = new ColorType(0.0,0.5,0.9);
+//        ColorType sphereKd = new ColorType(0.5,0.0,0.5);
+//        ColorType torusKs = new ColorType(1.0,1.0,1.0);
+//        ColorType sphereKs = new ColorType(1.0,1.0,1.0);
+//        int sphereNs = 20;
+//        int torusNs = 5;
+//		Material sphereMaterial = new Material(sphereKa, sphereKd, sphereKs, sphereNs);
+//		sphere = new Sphere(new Point3D(500, 200, 0), 100, sphereMaterial, 40, 40);
 	}
 
 	@Override
@@ -268,13 +296,12 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 		ColorType torusKa = new ColorType(0.0,0.0,0.0);
         ColorType sphereKa = new ColorType(0.0,0.0,0.0);
         ColorType torusKd = new ColorType(0.0,0.5,0.9);
-        ColorType sphereKd = new ColorType(0.5,0.0,0.5);
+        ColorType sphereKd = new ColorType(0.0,0.0,0.0);
         ColorType torusKs = new ColorType(1.0,1.0,1.0);
         ColorType sphereKs = new ColorType(1.0,1.0,1.0);
-        int sphereNs = 1;
         int torusNs = 5;
 		Material sphereMaterial = new Material(sphereKa, sphereKd, sphereKs, sphereNs);
-		sphere = new Sphere(new Point3D(500, 100, 0), 80, sphereMaterial, 200, 200);
+		sphere = new Sphere(new Point3D(128, 128, 128), 75, sphereMaterial, nstep, nstep);
 		Mesh3D mesh = sphere.mesh;
 		
 		int stepu = mesh.uStepTotal;

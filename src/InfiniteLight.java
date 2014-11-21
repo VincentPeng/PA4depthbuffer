@@ -1,4 +1,3 @@
-import java.time.chrono.MinguoChronology;
 
 public class InfiniteLight implements Light {
 
@@ -11,7 +10,7 @@ public class InfiniteLight implements Light {
 
 		lightColor = colorType;
 	}
-
+	static int a=0;
 	public Vector3D getDirection() {
 		return dirVec;
 	}
@@ -31,28 +30,32 @@ public class InfiniteLight implements Light {
 		// The angle between the viewing Vector3D and the normal of the point
 		double dotVN = viewVec.dotProduct(normal);
 		double dotLN = dirVec.dotProduct(normal);
+//		if(++a < 300)
+//		System.out.println(normal.x+" "+normal.y+" "+normal.z+"");
 		// If the point is facing opposite to the viewer, it will not be considered
-		if(dotVN>0.0) {
+		if(dotLN>0.0) {
 			if(material.isAmbient()) {
 				retColorType.r += material.getKa().r*lightColor.r;
 				retColorType.g += material.getKa().g*lightColor.g;
 				retColorType.b += material.getKa().b*lightColor.b;
 			}
 			if(material.isDiffuse()) {
-				
-				if(dotLN > 0.0) {
 					retColorType.r += material.getKd().r*lightColor.r*dotLN;
 					retColorType.g += material.getKd().g*lightColor.g*dotLN;
 					retColorType.b += material.getKd().b*lightColor.b*dotLN;
-				}
 			}
 			if(material.isSpecular()) {
 				Vector3D reflect = dirVec.reflect(normal);
 				double dotRV = reflect.dotProduct(viewVec);
 				if(dotLN >0 && dotRV>0.0) {
-					retColorType.r += material.getKs().r*lightColor.r*Math.pow(dotLN, material.getNs());
-					retColorType.g += material.getKs().g*lightColor.g*Math.pow(dotLN, material.getNs());
-					retColorType.b += material.getKs().b*lightColor.b* Math.pow(dotLN, material.getNs());
+					retColorType.r += (float)Math.pow(material.getKs().r*lightColor.r*dotLN, material.getNs());
+					if(++a < 64*64) {
+					//System.out.println(dotLN + " "+material.getKs().r+ " "+ lightColor.r+" "+ material.getNs()+" ");
+					//System.out.println(Math.pow(material.getKs().g*lightColor.g*dotLN, material.getNs()));
+					System.out.println(dotLN+" "+material.getNs()+" "+Math.pow(material.getKs().g*lightColor.g*dotLN, material.getNs()));
+					}
+					retColorType.g += (float)Math.pow(material.getKs().g*lightColor.g*dotLN, material.getNs());
+					retColorType.b += (float)Math.pow(material.getKs().b*lightColor.b*dotLN, material.getNs());
 				}
 			}
 				
