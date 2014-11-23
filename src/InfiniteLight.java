@@ -33,12 +33,13 @@ public class InfiniteLight implements Light {
 //		if(++a < 300)
 //		System.out.println(normal.x+" "+normal.y+" "+normal.z+"");
 		// If the point is facing opposite to the viewer, it will not be considered
+		if(material.isAmbient()) {
+			retColorType.r += material.getKa().r*lightColor.r;
+			retColorType.g += material.getKa().g*lightColor.g;
+			retColorType.b += material.getKa().b*lightColor.b;
+		}
 		if(dotLN>0.0) {
-			if(material.isAmbient()) {
-				retColorType.r += material.getKa().r*lightColor.r;
-				retColorType.g += material.getKa().g*lightColor.g;
-				retColorType.b += material.getKa().b*lightColor.b;
-			}
+			
 			if(material.isDiffuse()) {
 					retColorType.r += material.getKd().r*lightColor.r*dotLN;
 					retColorType.g += material.getKd().g*lightColor.g*dotLN;
@@ -48,14 +49,9 @@ public class InfiniteLight implements Light {
 				Vector3D reflect = dirVec.reflect(normal);
 				double dotRV = reflect.dotProduct(viewVec);
 				if(dotLN >0 && dotRV>0.0) {
-					retColorType.r += (float)Math.pow(material.getKs().r*lightColor.r*dotLN, material.getNs());
-					if(++a < 64*64) {
-					//System.out.println(dotLN + " "+material.getKs().r+ " "+ lightColor.r+" "+ material.getNs()+" ");
-					//System.out.println(Math.pow(material.getKs().g*lightColor.g*dotLN, material.getNs()));
-					System.out.println(dotLN+" "+material.getNs()+" "+Math.pow(material.getKs().g*lightColor.g*dotLN, material.getNs()));
-					}
-					retColorType.g += (float)Math.pow(material.getKs().g*lightColor.g*dotLN, material.getNs());
-					retColorType.b += (float)Math.pow(material.getKs().b*lightColor.b*dotLN, material.getNs());
+					retColorType.r += (float)Math.pow(material.getKs().r*lightColor.r*dotRV, material.getNs());
+					retColorType.g += (float)Math.pow(material.getKs().g*lightColor.g*dotRV, material.getNs());
+					retColorType.b += (float)Math.pow(material.getKs().b*lightColor.b*dotRV, material.getNs());
 				}
 			}
 				
