@@ -17,18 +17,16 @@ public class Cylinder extends Object3D {
 	
 	private void fillMesh() {
 		float x,y,z;
-		float angleu = (float)-Math.PI;
+		float angleu = (float)umin;
 		float anglev = (float)-Math.PI;
-		float angleuStep = (umax-umin)/(mesh.uStepTotal-1);
+		float angleuStep = (umax-umin)/(mesh.uStepTotal-3);
 		float anglevStep = (VMAX-VMIN)/(mesh.vStepTotal-1);
-		float cosu = (float)Math.cos(angleu);
-		float sinu = (float)Math.sin(angleu);
 		float cosv = (float)Math.cos(anglev);
 		float sinv = (float)Math.sin(anglev);
 		
 		Vector3D du = new Vector3D();
 		Vector3D dv = new Vector3D();
-		for(int i=0;i<mesh.uStepTotal-2;i++) {
+		for(int i=1;i<mesh.uStepTotal-1;i++) {
 			for(int j=0;j<mesh.vStepTotal;j++) {
 				x=(float)center.x+rx*cosv;
 				y=(float)center.y+ry*sinv;
@@ -54,8 +52,6 @@ public class Cylinder extends Object3D {
 			sinv = (float)Math.sin(anglev);
 			
 			angleu += angleuStep;
-			cosu = (float)Math.cos(angleu);
-			sinu = (float)Math.sin(angleu);
 		}
 		
 		anglev = (float)-Math.PI;
@@ -64,17 +60,16 @@ public class Cylinder extends Object3D {
 		
 		x=(float)center.x;
 		y=(float)center.y;
-		for(int i= mesh.uStepTotal-2;i<mesh.uStepTotal;i++) {
-			for(int j=0;j<mesh.vStepTotal;j++) {
-				if(i==mesh.uStepTotal-1) {
-					z=(float)center.z+umax;
-					mesh.normal[i][j] = new Vector3D(0, 0, 1);
-				} else {
-					z=(float)center.z-umax;
-					mesh.normal[i][j] = new Vector3D(0, 0, -1);
-				}
-				mesh.coordinates[i][j] = new Vector3D(x,y,z);
-			}
+		for(int j=0;j<mesh.vStepTotal;j++) {
+			int i = 0;
+			z=(float)center.z+umin;
+			mesh.normal[i][j] = new Vector3D(0, 0, -1);
+			mesh.coordinates[i][j] = new Vector3D(x,y,z);
+			
+			i = mesh.uStepTotal-1;
+			z=(float)center.z+umax;
+			mesh.normal[i][j] = new Vector3D(0, 0, 1);
+			mesh.coordinates[i][j] = new Vector3D(x,y,z);
 		}
 	}
 

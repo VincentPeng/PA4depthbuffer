@@ -7,11 +7,11 @@ public class Mesh3D {
 	public Mesh3D(int v, int u) {
 		this.uStepTotal =u;
 		this.vStepTotal=v;
-		coordinates = new Vector3D[u][v];
-		normal = new Vector3D[u][v];
+		coordinates = new Vector3D[v][u];
+		normal = new Vector3D[v][u];
 		for(int i=0;i<u;i++) {
 			for(int j=0;j<v;j++) {
-				normal[i][j] = new Vector3D();
+				normal[j][i] = new Vector3D();
 			}
 		}
 	}
