@@ -282,11 +282,11 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 		ColorType ellipKd = new ColorType(0.5, 0.0, 0.5);
 		ColorType ellipKs = new ColorType(1.0, 1.0, 1.0);
 
-		ColorType cyinderKa = new ColorType(0.1, 0.1, 0.1);
-		ColorType cyinderKd = new ColorType(0.5, 0.0, 0.5);
+		ColorType cyinderKa = new ColorType(0.2, 0.2, 0.2);
+		ColorType cyinderKd = new ColorType(0.5, 0.5, 0.5);
 		ColorType cyinderKs = new ColorType(1.0, 1.0, 1.0);
 
-		ColorType boxKa = new ColorType(0.1, 0.1, 0.1);
+		ColorType boxKa = new ColorType(0.2, 0.2, 0.2);
 		ColorType boxKd = new ColorType(0.5, 0.0, 0.5);
 		ColorType boxKs = new ColorType(1.0, 1.0, 1.0);
 
