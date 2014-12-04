@@ -12,6 +12,7 @@ public class Mesh3D {
 		for(int i=0;i<u;i++) {
 			for(int j=0;j<v;j++) {
 				normal[j][i] = new Vector3D();
+				coordinates[j][i] = new Vector3D();
 			}
 		}
 	}
@@ -40,6 +41,23 @@ public class Mesh3D {
 				normal[i][j] = p.get_v();
 			}
 		
+		
+	}
+	
+	public void transformMesh(TransformMatrix vTrans , TransformMatrix nTrans)
+	{
+		for(int i = 0 ; i < vStepTotal; i++)
+		{
+			for(int j = 0; j < uStepTotal; j++)
+			{
+				coordinates[i][j] = vTrans.multiplyPoint(coordinates[i][j]);
+				
+				
+				normal[i][j] = nTrans.multiplyPoint(normal[i][j]);
+				
+				normal[i][j].normalize();
+			}
+		}
 		
 	}
 }

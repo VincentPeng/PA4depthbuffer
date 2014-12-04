@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 
 public class Torus extends Object3D{
 
@@ -7,16 +9,19 @@ public class Torus extends Object3D{
 	private static final float VMIN = (float)-Math.PI;
 	private static final float VMAX = (float)Math.PI;
 	
+	MeshSurface body;
+	
 	public Torus(Point3D center, Material mat, float r, float r_axial, int uStepTotal,
 			int vStepTotal) {
 		super(center, mat);
 		this.r = r;
 		this.r_axial = r_axial;
-		mesh = new Mesh3D( vStepTotal, uStepTotal);
+		body = new MeshSurface(center, mat, uStepTotal, vStepTotal);
 		fillMesh();
 	}
 
 	private void fillMesh() {
+		Mesh3D mesh = body.mesh;
 		float x,y,z;
 		float angleu = (float)-Math.PI;
 		float anglev = (float)-Math.PI;
@@ -29,8 +34,8 @@ public class Torus extends Object3D{
 		
 		Vector3D du = new Vector3D();
 		Vector3D dv = new Vector3D();
-		for(int i=0;i<mesh.uStepTotal;i++) {
-			for(int j=0;j<mesh.vStepTotal;j++) {
+		for(int i=0;i<mesh.vStepTotal;i++) {
+			for(int j=0;j<mesh.uStepTotal;j++) {
 				x=(float)center.x+(r_axial+r*cosu)*cosv;
 				y=(float)center.y+(r_axial+r*cosu)*sinv;
 				z=(float)center.z+r*sinu;
@@ -59,6 +64,66 @@ public class Torus extends Object3D{
 			sinu = (float)Math.sin(angleu);
 		}
 	}
+
+	@Override
+	public void drawFlat(ArrayList<LightSource> lightSources, Vector3D viewVec) {
+		body.drawFlatShading(lightSources, viewVec);
+	}
+
+	@Override
+	public void drawGouraud(ArrayList<LightSource> lightSources,
+			Vector3D viewVec) {
+		body.drawGouraudShading(lightSources, viewVec);
+	}
+
+	@Override
+	public void drawPhong(ArrayList<LightSource> lightSources, Vector3D viewVec) {
+		body.drawPhongShading(lightSources, viewVec);
+	}
 	
+	public void rotate(Quaternion q , Vector3D rotate_center)
+	{
+		
+		TransformMatrix qMatrix = new TransformMatrix();
+		TransformMatrix transposeQua = new TransformMatrix();
+		
+		float [] transIn = TransformMatrix.translate(- rotate_center.x,  - rotate_center.y,  - rotate_center.z);
+		float [] transOut = TransformMatrix.translate(rotate_center.x, rotate_center.y, rotate_center.z);
+		
+		transposeQua.setMatrix(q.toMatrix());
+		
+		
+		qMatrix.setMatrix(transOut);
+		
+		qMatrix.multiplyMatrix(transposeQua.getTranspose());
 	
+		qMatrix.multiplyMatrix(transIn);
+		
+		TransformMatrix nTrans = new TransformMatrix();
+		nTrans.setMatrix(transposeQua.getTranspose());
+		
+		Vector3D vCenter = new Vector3D(this.center.x , this.center.y , this.center.z);
+		
+		vCenter = qMatrix.multiplyPoint(vCenter);
+		
+		body.mesh.transformMesh(qMatrix , nTrans);
+		
+		this.center.x = Math.round(vCenter.x);
+		this.center.y = Math.round(vCenter.y);
+		this.center.z = Math.round(vCenter.z);
+		
+		body.center = center;
+
+	}
+	
+	@Override
+	public void toggleDiff(boolean isDiff) {
+		body.getMat().setDiffuse(isDiff);
+		
+	}
+
+	@Override
+	public void toggleSpec(boolean isSpec) {
+		body.getMat().setSpecular(isSpec);
+	}
 }

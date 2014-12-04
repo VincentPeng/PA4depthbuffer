@@ -49,4 +49,16 @@ public class Material {
 		return isSpecular;
 	}
 
+	public void setDiffuse(boolean isDiffuse) {
+		this.isDiffuse = isDiffuse;
+	}
+
+	public void setAmbient(boolean isAmbient) {
+		this.isAmbient = isAmbient;
+	}
+
+	public void setSpecular(boolean isSpecular) {
+		this.isSpecular = isSpecular;
+	}
+
 }

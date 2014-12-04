@@ -65,5 +65,9 @@ public class ColorType
 	{
 		return Math.round(b*255.0f);
 	}
+	
+	public void color() {
+		
+	}
 
 }

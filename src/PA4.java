@@ -11,6 +11,7 @@ import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
 import java.awt.image.WritableRaster;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 
 import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
@@ -31,12 +32,24 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 	private GLCapabilities capabilities;
 	private GLCanvas canvas;
 	private FPSAnimator animator;
-	BufferedImage buffer;
+	public static BufferedImage buffer;
 	private int last_x = 0;
 	private int last_y = 0;
 	boolean rotate_world;
-	private int nstep = 64;
-	private Light light;
+	private int nstep = 20;
+	private LightSource infiniteLight;
+	private LightSource spotLight;
+	private LightSource pointLight;
+	private LightSource ambientLight;
+
+	private boolean stateChange;
+	private boolean toggleInfi = true;
+	private boolean toggleSpot = false;
+	private boolean togglePoint = false;
+	private boolean toggleSpec = true;
+	private boolean toggleDiff = true;
+	private boolean toggleAmb = true;
+	private ArrayList<LightSource> lightSources;
 	// exponent for specular light
 	private int expNs = 10;
 	private Vector3D viewing_center = new Vector3D(
@@ -46,8 +59,15 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 	private Quaternion viewing_quaternion = new Quaternion(); // world rotation
 																// controlled by
 																// mouse
+	public static DepthBuffer depthBuffer;
 
-	private boolean doSmoothShading = true;
+	private Cylinder cylinder;
+	private Ellipsoid ellipsoid;
+	private Box box;
+	private Torus torus;
+	private Sphere sphere;
+
+	private char renderMethod = 'F';
 
 	public PA4() {
 		capabilities = new GLCapabilities(null);
@@ -69,7 +89,15 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 		setVisible(true);
 		setResizable(false);
 
-		light = new InfiniteLight(0, 1, 1, new ColorType(1, 1, 1));
+		depthBuffer = new DepthBuffer(DEFAULT_WINDOW_WIDTH,
+				DEFAULT_WINDOW_HEIGHT);
+
+		ColorType lightColor = new ColorType(1, 1, 1);
+		infiniteLight = new InfiniteLight(0, 1, 1, lightColor);
+		pointLight = new PointLight(lightColor, new Point3D(200, 200, 500));
+		spotLight = new SpotLight(new Point3D(400, 200, 500), new Vector3D(1,
+				0, 1), lightColor, Math.PI / 6);
+		ambientLight = new AmbientLight(lightColor);
 	}
 
 	public void run() {
@@ -115,9 +143,17 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 				// save x, y as last x, y
 				this.last_x = x;
 				this.last_y = y;
-				drawShade();
+				rotateScene(Q);
 			}
 		}
+	}
+
+	private void rotateScene(Quaternion qua) {
+		cylinder.rotate(qua, viewing_center);
+		sphere.rotate(qua, viewing_center);
+		ellipsoid.rotate(qua, viewing_center);
+		torus.rotate(qua, viewing_center);
+		box.rotate(qua, viewing_center);
 	}
 
 	@Override
@@ -170,9 +206,60 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 			}.start();
 			System.exit(0);
 			break;
+		// Toggle on Specular/Diffuse/Ambient
 		case 'S':
 		case 's':
-			doSmoothShading = !doSmoothShading;
+			toggleSpec = !toggleSpec;
+			stateChange = true;
+			System.out.println("Specular=" + toggleSpec);
+			break;
+		case 'D':
+		case 'd':
+			toggleDiff = !toggleDiff;
+			stateChange = true;
+			System.out.println("Diffuse=" + toggleDiff);
+			break;
+		case 'A':
+		case 'a':
+			toggleAmb = !toggleAmb;
+			stateChange = true;
+			System.out.println("Ambient=" + toggleAmb);
+			break;
+		// Change the render method to Flat/Gouraud/Phong
+		case 'F':
+		case 'f':
+			renderMethod = key.getKeyChar();
+			System.out.println("Render method : Flat");
+			break;
+		case 'G':
+		case 'g':
+			renderMethod = key.getKeyChar();
+			System.out.println("Render method : Gouraud");
+			break;
+		case 'P':
+		case 'p':
+			renderMethod = key.getKeyChar();
+			System.out.println("Render method : Phong");
+			break;
+		case '1':
+			toggleInfi = !toggleInfi;
+			System.out.println("toggleInfi=" + toggleInfi);
+			stateChange = true;
+			break;
+		case '2':
+			togglePoint = !togglePoint;
+			System.out.println("togglePoint=" + togglePoint);
+			stateChange = true;
+			break;
+		case '3':
+			toggleSpot = !toggleSpot;
+			System.out.println("toggleSpot=" + toggleSpot);
+			stateChange = true;
+			break;
+		// case '4':
+		//
+		// stateChange = true;
+		// break;
 		case '+':
 		case '=':
 			expNs++;
@@ -230,10 +317,19 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 		byte[] data = dbb.getData();
 
 		gl.glPixelStorei(GL2.GL_UNPACK_ALIGNMENT, 1);
-
+		changeLight();
 		drawShade();
 		gl.glDrawPixels(buffer.getWidth(), buffer.getHeight(), GL2.GL_BGR,
 				GL2.GL_UNSIGNED_BYTE, ByteBuffer.wrap(data));
+	}
+
+	private void drawShade() {
+		clearPixelBuffer();
+		cylinder.draw(lightSources, viewingVec, renderMethod);
+		sphere.draw(lightSources, viewingVec, renderMethod);
+		ellipsoid.draw(lightSources, viewingVec, renderMethod);
+		torus.draw(lightSources, viewingVec, renderMethod);
+		 box.draw(lightSources, viewingVec, renderMethod);
 	}
 
 	void clearPixelBuffer() {
@@ -241,6 +337,7 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 		g.setColor(Color.BLACK);
 		g.fillRect(0, 0, buffer.getWidth(), buffer.getHeight());
 		g.dispose();
+		depthBuffer.clearBuffer();
 	}
 
 	@Override
@@ -256,7 +353,7 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 		Dimension dimension = this.getContentPane().getSize();
 		buffer = new BufferedImage(dimension.width, dimension.height,
 				BufferedImage.TYPE_3BYTE_BGR);
-
+		initScene();
 		clearPixelBuffer();
 	}
 
@@ -267,18 +364,18 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 
 	}
 
-	private void drawShade() {
+	private void initScene() {
 
 		clearPixelBuffer();
-		ColorType torusKa = new ColorType(0.0, 0.0, 0.0);
+		ColorType torusKa = new ColorType(0.2, 0.2, 0.2);
 		ColorType torusKd = new ColorType(0.0, 0.5, 0.9);
 		ColorType torusKs = new ColorType(1.0, 1.0, 1.0);
 
-		ColorType sphereKa = new ColorType(0.1, 0.1, 0.1);
+		ColorType sphereKa = new ColorType(0.2, 0.2, 0.2);
 		ColorType sphereKd = new ColorType(0.5, 0.0, 0.5);
 		ColorType sphereKs = new ColorType(1.0, 1.0, 1.0);
 
-		ColorType ellipKa = new ColorType(0.1, 0.1, 0.1);
+		ColorType ellipKa = new ColorType(0.2, 0.2, 0.2);
 		ColorType ellipKd = new ColorType(0.5, 0.0, 0.5);
 		ColorType ellipKs = new ColorType(1.0, 1.0, 1.0);
 
@@ -297,139 +394,162 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 		Material cylinderMat = new Material(cyinderKa, cyinderKd, cyinderKs,
 				expNs);
 		Material boxMat = new Material(boxKa, boxKd, boxKs, expNs);
-		drawSphere(new Point3D(128, 128, 128), sphereMat, 1.5f * radius);
-		drawTorus(new Point3D(256, 384, 128), torusMat, radius);
-		drawEllipsoid(new Point3D(512, 128, 128), ellipMat, radius * 2, radius,
-				radius);
-		drawCylinder(new Point3D(700, 384, 128), cylinderMat, radius * 1.5f,
-				radius, radius * 2.5f);
-		drawBox(new Point3D(900,128, 128),boxMat,radius*2);
-
-	}
-
-
-	// helper method that computes the unit normal to the plane of the triangle
-	// degenerate triangles yield normal that is numerically zero
-	private Vector3D computeTriangleNormal(Vector3D v0, Vector3D v1, Vector3D v2) {
-		Vector3D e0 = v1.minus(v2);
-		Vector3D e1 = v0.minus(v2);
-		Vector3D norm = e0.crossProduct(e1);
-
-		if (norm.magnitude() > 0.000001)
-			norm.normalize();
-		else
-			// detect degenerate triangle and set its normal to zero
-			norm.set((float) 0.0, (float) 0.0, (float) 0.0);
-
-		return norm;
-	}
-
-	private void drawSphere(Point3D center, Material mat, float radius) {
-		Sphere sphere = new Sphere(center, radius, mat, nstep, nstep);
-		sphere.mesh.rotateMesh(viewing_quaternion, viewing_center);
-		drawMesh(sphere);
-	}
-
-	private void drawTorus(Point3D center, Material mat, float radius) {
-		Torus torus = new Torus(center, mat, radius * 0.8f, radius * 1.25f,
+		cylinder = new Cylinder(new Point3D(700, 384, 128), cylinderMat,
+				radius * 1.5f, radius, radius * 1.5f, nstep, nstep, viewingVec);
+		sphere = new Sphere(new Point3D(128, 128, 128), radius, sphereMat,
 				nstep, nstep);
-		torus.mesh.rotateMesh(viewing_quaternion, viewing_center);
-		drawMesh(torus);
+		torus = new Torus(new Point3D(256, 384, 128), torusMat, radius * 0.8f,
+				radius * 1.25f, nstep, nstep);
+		ellipsoid = new Ellipsoid(new Point3D(512, 128, 128), ellipMat,
+				radius * 2, radius, radius, nstep, nstep);
+		box = new Box(new Point3D(900, 128, 128), radius * 2, boxMat, nstep, nstep);
+//				new Box(new Point3D(900, 128, 128), boxMat, radius * 2);
+		stateChange = true;
+		changeLight();
+		// drawSphere(new Point3D(128, 128, 128), sphereMat, 1.5f * radius);
+		// drawTorus(new Point3D(256, 384, 128), torusMat, radius);
+		// drawEllipsoid(new Point3D(512, 128, 128), ellipMat, radius * 2,
+		// radius,
+		// radius);
+		// drawCylinder(new Point3D(700, 384, 128), cylinderMat, radius * 1.5f,
+		// radius, radius * 2.5f);
+		// drawBox(new Point3D(900,128, 128),boxMat,radius*2);
+
 	}
 
-	private void drawEllipsoid(Point3D center, Material mat, float rx,
-			float ry, float rz) {
-		Ellipsoid ellipsoid = new Ellipsoid(center, mat, rx, ry, rz, nstep,
-				nstep);
-		ellipsoid.mesh.rotateMesh(viewing_quaternion, viewing_center);
-		drawMesh(ellipsoid);
-	}
+	//
+	//
+	// private void drawSphere(Point3D center, Material mat, float radius) {
+	// Sphere sphere = new Sphere(center, radius, mat, nstep, nstep);
+	// sphere.mesh.rotateMesh(viewing_quaternion, viewing_center);
+	// drawMesh(sphere);
+	// }
+	//
+	// private void drawTorus(Point3D center, Material mat, float radius) {
+	// Torus torus = new Torus(center, mat, radius * 0.8f, radius * 1.25f,
+	// nstep, nstep);
+	// torus.mesh.rotateMesh(viewing_quaternion, viewing_center);
+	// drawMesh(torus);
+	// }
+	//
+	// private void drawEllipsoid(Point3D center, Material mat, float rx,
+	// float ry, float rz) {
+	// Ellipsoid ellipsoid = new Ellipsoid(center, mat, rx, ry, rz, nstep,
+	// nstep);
+	// ellipsoid.mesh.rotateMesh(viewing_quaternion, viewing_center);
+	// drawMesh(ellipsoid);
+	// }
 
-	private void drawCylinder(Point3D center, Material mat, float rx, float ry,
-			float umax) {
-		Cylinder cylinder = new Cylinder(center, mat, rx, ry, umax, nstep,
-				nstep);
-		cylinder.mesh.rotateMesh(viewing_quaternion, viewing_center);
-		drawMesh(cylinder);
-	}
-	
+	// private void drawCylinder(Point3D center, Material mat, float rx, float
+	// ry,
+	// float umax) {
+	//
+	// cylinder.draw(lightSources, viewing_center, renderMethod);
+	// }
+	//
+	//
+	// private void drawBox(Point3D center, Material mat, float edge) {
+	// Box box = new Box(center, mat, edge);
+	// box.mesh.rotateMesh(viewing_quaternion, viewing_center);
+	// drawMesh(box);
+	// }
+	//
+	// private void drawMesh(Object3D ob) {
+	// Vector3D triangle_normal = new Vector3D();
+	// Mesh3D mesh = ob.mesh;
+	// int stepu = mesh.uStepTotal;
+	// int stepv = mesh.vStepTotal;
+	// Point2D[] tri = { new Point2D(), new Point2D(), new Point2D() };
+	// Vector3D v0, v1, v2, n0, n1, n2;
+	// Material mat = ob.getMaterial();
+	// for (int i = 0; i < stepv - 1; i++) {
+	// for (int j = 0; j < stepu - 1; j++) {
+	// // TODO: add depthBuffer
+	// v0 = mesh.coordinates[i][j];
+	// v1 = mesh.coordinates[i][j + 1];
+	// v2 = mesh.coordinates[i + 1][j + 1];
+	//
+	// triangle_normal = computeTriangleNormal(v0, v1, v2);
+	// if (viewingVec.dotProduct(triangle_normal) > 0.0) {
+	// if (doSmoothShading && !(ob instanceof Box) ) {
+	// n0 = mesh.normal[i][j];
+	// n1 = mesh.normal[i][j + 1];
+	// n2 = mesh.normal[i + 1][j + 1];
+	// tri[0].c = light.applyLight(mat, viewingVec, n0);
+	// tri[1].c = light.applyLight(mat, viewingVec, n1);
+	// tri[2].c = light.applyLight(mat, viewingVec, n2);
+	// } else {
+	// n0 = n1 = n2 = triangle_normal;
+	// tri[0].c = tri[1].c = tri[2].c = light.applyLight(mat,
+	// viewingVec, triangle_normal);
+	// }
+	// tri[0].x = (int) v0.x;
+	// tri[0].y = (int) v0.y;
+	// tri[1].x = (int) v1.x;
+	// tri[1].y = (int) v1.y;
+	// tri[2].x = (int) v2.x;
+	// tri[2].y = (int) v2.y;
+	//
+	// SketchBase.drawTriangle(buffer, tri[0], tri[1], tri[2],
+	// doSmoothShading);
+	// }
+	//
+	// v0 = mesh.coordinates[i][j];
+	// v1 = mesh.coordinates[i + 1][j + 1];
+	// v2 = mesh.coordinates[i + 1][j];
+	//
+	// triangle_normal = computeTriangleNormal(v0, v1, v2);
+	// if (viewingVec.dotProduct(triangle_normal) > 0.0) {
+	// if (doSmoothShading && !(ob instanceof Box)) {
+	// n0 = mesh.normal[i][j];
+	// n1 = mesh.normal[i + 1][j + 1];
+	// n2 = mesh.normal[i + 1][j];
+	// tri[0].c = light.applyLight(mat, viewingVec, n0);
+	// tri[1].c = light.applyLight(mat, viewingVec, n1);
+	// tri[2].c = light.applyLight(mat, viewingVec, n2);
+	// } else {
+	// n0 = n1 = n2 = triangle_normal;
+	// tri[0].c = tri[1].c = tri[2].c = light.applyLight(mat,
+	// viewingVec, triangle_normal);
+	// }
+	//
+	// tri[0].x = (int) v0.x;
+	// tri[0].y = (int) v0.y;
+	// tri[1].x = (int) v1.x;
+	// tri[1].y = (int) v1.y;
+	// tri[2].x = (int) v2.x;
+	// tri[2].y = (int) v2.y;
+	//
+	// SketchBase.drawTriangle(buffer, tri[0], tri[1], tri[2],
+	// doSmoothShading);
+	// }
+	// }
+	// }
+	// }
 
-	private void drawBox(Point3D center, Material mat, float edge) {
-		Box box = new Box(center, mat, edge);
-		box.mesh.rotateMesh(viewing_quaternion, viewing_center);
-		drawMesh(box);
-	}
+	private void changeLight() {
+		if (stateChange) {
+			lightSources = new ArrayList<LightSource>();
+			if (toggleInfi)
+				lightSources.add(infiniteLight);
+			if (togglePoint)
+				lightSources.add(pointLight);
+			if (toggleAmb)
+				lightSources.add(ambientLight);
+			if (toggleSpot)
+				lightSources.add(spotLight);
+			ellipsoid.toggleDiff(toggleDiff);
+			cylinder.toggleDiff(toggleDiff);
+			sphere.toggleDiff(toggleDiff);
+			torus.toggleDiff(toggleDiff);
+			box.toggleDiff(toggleDiff);
 
-	private void drawMesh(Object3D ob) {
-		Vector3D triangle_normal = new Vector3D();
-		Mesh3D mesh = ob.mesh;
-		int stepu = mesh.uStepTotal;
-		int stepv = mesh.vStepTotal;
-		Point2D[] tri = { new Point2D(), new Point2D(), new Point2D() };
-		Vector3D v0, v1, v2, n0, n1, n2;
-		Material mat = ob.getMaterial();
-		for (int i = 0; i < stepv - 1; i++) {
-			for (int j = 0; j < stepu - 1; j++) {
-				// TODO: add depthBuffer
-				v0 = mesh.coordinates[i][j];
-				v1 = mesh.coordinates[i][j + 1];
-				v2 = mesh.coordinates[i + 1][j + 1];
-
-				triangle_normal = computeTriangleNormal(v0, v1, v2);
-				if (viewingVec.dotProduct(triangle_normal) > 0.0) {
-					if (doSmoothShading && !(ob instanceof Box) ) {
-						n0 = mesh.normal[i][j];
-						n1 = mesh.normal[i][j + 1];
-						n2 = mesh.normal[i + 1][j + 1];
-						tri[0].c = light.applyLight(mat, viewingVec, n0);
-						tri[1].c = light.applyLight(mat, viewingVec, n1);
-						tri[2].c = light.applyLight(mat, viewingVec, n2);
-					} else {
-						n0 = n1 = n2 = triangle_normal;
-						tri[0].c = tri[1].c = tri[2].c = light.applyLight(mat,
-								viewingVec, triangle_normal);
-					}
-					tri[0].x = (int) v0.x;
-					tri[0].y = (int) v0.y;
-					tri[1].x = (int) v1.x;
-					tri[1].y = (int) v1.y;
-					tri[2].x = (int) v2.x;
-					tri[2].y = (int) v2.y;
-
-					SketchBase.drawTriangle(buffer, tri[0], tri[1], tri[2],
-							doSmoothShading);
-				}
-
-				v0 = mesh.coordinates[i][j];
-				v1 = mesh.coordinates[i + 1][j + 1];
-				v2 = mesh.coordinates[i + 1][j];
-
-				triangle_normal = computeTriangleNormal(v0, v1, v2);
-				if (viewingVec.dotProduct(triangle_normal) > 0.0) {
-					if (doSmoothShading && !(ob instanceof Box)) {
-						n0 = mesh.normal[i][j];
-						n1 = mesh.normal[i + 1][j + 1];
-						n2 = mesh.normal[i + 1][j];
-						tri[0].c = light.applyLight(mat, viewingVec, n0);
-						tri[1].c = light.applyLight(mat, viewingVec, n1);
-						tri[2].c = light.applyLight(mat, viewingVec, n2);
-					} else {
-						n0 = n1 = n2 = triangle_normal;
-						tri[0].c = tri[1].c = tri[2].c = light.applyLight(mat,
-								viewingVec, triangle_normal);
-					}
-
-					tri[0].x = (int) v0.x;
-					tri[0].y = (int) v0.y;
-					tri[1].x = (int) v1.x;
-					tri[1].y = (int) v1.y;
-					tri[2].x = (int) v2.x;
-					tri[2].y = (int) v2.y;
-
-					SketchBase.drawTriangle(buffer, tri[0], tri[1], tri[2],
-							doSmoothShading);
-				}
-			}
+			ellipsoid.toggleSpec(toggleSpec);
+			cylinder.toggleSpec(toggleSpec);
+			sphere.toggleSpec(toggleSpec);
+			torus.toggleSpec(toggleSpec);
+			box.toggleSpec(toggleSpec);
+			stateChange = false;
 		}
 	}
 }
