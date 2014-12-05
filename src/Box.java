@@ -278,4 +278,26 @@ public class Box extends Object3D {
 		center.z = Math.round(tmp.z);
 	}
 
+	@Override
+	public void translate(float x , float y , float z)
+	{
+		
+		center.x += x;
+		center.y += y;
+		center.z += z;
+		
+		TransformMatrix translate = new TransformMatrix();
+		translate.setMatrix(TransformMatrix.translate(x, y, z));
+		TransformMatrix nTrans = new TransformMatrix();
+		
+		topSurface.mesh.transformMesh(translate, nTrans);
+		downSurface.mesh.transformMesh(translate, nTrans);
+		leftSurface.mesh.transformMesh(translate, nTrans);
+		rightSurface.mesh.transformMesh(translate, nTrans);
+		frontSurface.mesh.transformMesh(translate, nTrans);
+		rearSurface.mesh.transformMesh(translate, nTrans);
+		
+		
+	}
+
 }

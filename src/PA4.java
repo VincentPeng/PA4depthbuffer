@@ -27,8 +27,8 @@ import com.jogamp.opengl.util.gl2.GLUT;
 public class PA4 extends JFrame implements GLEventListener, KeyListener,
 		MouseListener, MouseMotionListener {
 
-	private static final int DEFAULT_WINDOW_WIDTH = 1024;
-	private static final int DEFAULT_WINDOW_HEIGHT = 640;
+	public static final int DEFAULT_WINDOW_WIDTH = 1024;
+	public static final int DEFAULT_WINDOW_HEIGHT = 640;
 	private GLCapabilities capabilities;
 	private GLCanvas canvas;
 	private FPSAnimator animator;
@@ -36,7 +36,7 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 	private int last_x = 0;
 	private int last_y = 0;
 	boolean rotate_world;
-	private int nstep = 20;
+	private int nstep = 48;
 	private LightSource infiniteLight;
 	private LightSource spotLight;
 	private LightSource pointLight;
@@ -51,7 +51,7 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 	private boolean toggleAmb = true;
 	private ArrayList<LightSource> lightSources;
 	// exponent for specular light
-	private int expNs = 10;
+	private int expNs = 5;
 	private Vector3D viewing_center = new Vector3D(
 			(float) (DEFAULT_WINDOW_WIDTH / 2),
 			(float) (DEFAULT_WINDOW_HEIGHT / 2), (float) 0.0);
@@ -60,14 +60,19 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 																// controlled by
 																// mouse
 	public static DepthBuffer depthBuffer;
-
-	private Cylinder cylinder;
-	private Ellipsoid ellipsoid;
-	private Box box;
-	private Torus torus;
-	private Sphere sphere;
+//
+//	private Cylinder cylinder;
+//	private Ellipsoid ellipsoid;
+//	private Box box;
+//	private Torus torus;
+//	private Sphere sphere;
 
 	private char renderMethod = 'F';
+	private boolean toggleCameraOrOb = true;
+	private Object3D selectedObj;
+	private ArrayList<Object3D> objList;
+	private int sceneNum = 0;
+	private Scene scene;
 
 	public PA4() {
 		capabilities = new GLCapabilities(null);
@@ -94,10 +99,12 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 
 		ColorType lightColor = new ColorType(1, 1, 1);
 		infiniteLight = new InfiniteLight(0, 1, 1, lightColor);
-		pointLight = new PointLight(lightColor, new Point3D(200, 200, 500));
-		spotLight = new SpotLight(new Point3D(400, 200, 500), new Vector3D(1,
-				0, 1), lightColor, Math.PI / 6);
+		pointLight = new PointLight(lightColor, new Point3D(200, 200, 300));
+		spotLight = new SpotLight(new Point3D(400, 200, 300), new Vector3D(1,
+				0, 1), lightColor, Math.PI / 3);
 		ambientLight = new AmbientLight(lightColor);
+
+		scene = new Scene();
 	}
 
 	public void run() {
@@ -143,17 +150,14 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 				// save x, y as last x, y
 				this.last_x = x;
 				this.last_y = y;
-				rotateScene(Q);
+				Q.normalize();
+				if (toggleCameraOrOb) {
+					scene.rotateCamera(Q, viewing_center);
+				} else {
+					scene.rotateObj(Q);
+				}
 			}
 		}
-	}
-
-	private void rotateScene(Quaternion qua) {
-		cylinder.rotate(qua, viewing_center);
-		sphere.rotate(qua, viewing_center);
-		ellipsoid.rotate(qua, viewing_center);
-		torus.rotate(qua, viewing_center);
-		box.rotate(qua, viewing_center);
 	}
 
 	@Override
@@ -197,6 +201,24 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 	@Override
 	public void keyTyped(KeyEvent key) {
 		switch (key.getKeyChar()) {
+		case 'c':
+		case 'C':
+			toggleCameraOrOb = !toggleCameraOrOb;
+			System.out.println("choose camera to translate? "
+					+ toggleCameraOrOb);
+			break;
+		// Choose which objecht to be rotated
+		case '[':
+		case '{':
+			scene.changeSelectedObj();
+			break;
+		// change the 5 scenes which to be drawn
+		case 't':
+		case 'T':
+			sceneNum = (sceneNum+1)%5;
+			scene.turnOnScene(sceneNum);
+			System.out.println("turn on scene num:" + sceneNum);
+			break;
 		case 'Q':
 		case 'q':
 			new Thread() {
@@ -256,10 +278,6 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 			System.out.println("toggleSpot=" + toggleSpot);
 			stateChange = true;
 			break;
-		// case '4':
-		//
-		// stateChange = true;
-		// break;
 		case '+':
 		case '=':
 			expNs++;
@@ -298,7 +316,34 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 			}.start();
 			System.exit(0);
 			break;
-
+		case KeyEvent.VK_UP:
+			if (toggleCameraOrOb) {
+				scene.transCamera(0, 5, 0);
+			} else {
+				scene.transObj(0, -5, 0);
+			}
+			break;
+		case KeyEvent.VK_DOWN:
+			if (toggleCameraOrOb) {
+				scene.transCamera(0, -5, 0);
+			} else {
+				scene.transObj(0, 5, 0);
+			}
+			break;
+		case KeyEvent.VK_LEFT:
+			if (toggleCameraOrOb) {
+				scene.transCamera(5, 0, 0);
+			} else {
+				scene.transObj(-5, 0, 0);
+			}
+			break;
+		case KeyEvent.VK_RIGHT:
+			if (toggleCameraOrOb) {
+				scene.transCamera(-5, 0, 0);
+			} else {
+				scene.transObj(5, 0, 0);
+			}
+			break;
 		default:
 			break;
 		}
@@ -318,21 +363,21 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 
 		gl.glPixelStorei(GL2.GL_UNPACK_ALIGNMENT, 1);
 		changeLight();
-		drawShade();
+		scene.drawScene(renderMethod);
 		gl.glDrawPixels(buffer.getWidth(), buffer.getHeight(), GL2.GL_BGR,
 				GL2.GL_UNSIGNED_BYTE, ByteBuffer.wrap(data));
 	}
 
-	private void drawShade() {
-		clearPixelBuffer();
-		cylinder.draw(lightSources, viewingVec, renderMethod);
-		sphere.draw(lightSources, viewingVec, renderMethod);
-		ellipsoid.draw(lightSources, viewingVec, renderMethod);
-		torus.draw(lightSources, viewingVec, renderMethod);
-		 box.draw(lightSources, viewingVec, renderMethod);
-	}
+	// private void drawShade() {
+	// clearPixelBuffer();
+	// cylinder.draw(lightSources, viewingVec, renderMethod);
+	// sphere.draw(lightSources, viewingVec, renderMethod);
+	// ellipsoid.draw(lightSources, viewingVec, renderMethod);
+	// torus.draw(lightSources, viewingVec, renderMethod);
+	// box.draw(lightSources, viewingVec, renderMethod);
+	// }
 
-	void clearPixelBuffer() {
+	public static void clearPixelBuffer() {
 		Graphics2D g = buffer.createGraphics();
 		g.setColor(Color.BLACK);
 		g.fillRect(0, 0, buffer.getWidth(), buffer.getHeight());
@@ -353,7 +398,8 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 		Dimension dimension = this.getContentPane().getSize();
 		buffer = new BufferedImage(dimension.width, dimension.height,
 				BufferedImage.TYPE_3BYTE_BGR);
-		initScene();
+		scene = new Scene();
+		scene.openScene0();
 		clearPixelBuffer();
 	}
 
@@ -364,58 +410,65 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 
 	}
 
-	private void initScene() {
-
-		clearPixelBuffer();
-		ColorType torusKa = new ColorType(0.2, 0.2, 0.2);
-		ColorType torusKd = new ColorType(0.0, 0.5, 0.9);
-		ColorType torusKs = new ColorType(1.0, 1.0, 1.0);
-
-		ColorType sphereKa = new ColorType(0.2, 0.2, 0.2);
-		ColorType sphereKd = new ColorType(0.5, 0.0, 0.5);
-		ColorType sphereKs = new ColorType(1.0, 1.0, 1.0);
-
-		ColorType ellipKa = new ColorType(0.2, 0.2, 0.2);
-		ColorType ellipKd = new ColorType(0.5, 0.0, 0.5);
-		ColorType ellipKs = new ColorType(1.0, 1.0, 1.0);
-
-		ColorType cyinderKa = new ColorType(0.2, 0.2, 0.2);
-		ColorType cyinderKd = new ColorType(0.5, 0.5, 0.5);
-		ColorType cyinderKs = new ColorType(1.0, 1.0, 1.0);
-
-		ColorType boxKa = new ColorType(0.2, 0.2, 0.2);
-		ColorType boxKd = new ColorType(0.5, 0.0, 0.5);
-		ColorType boxKs = new ColorType(1.0, 1.0, 1.0);
-
-		int radius = 50;
-		Material sphereMat = new Material(sphereKa, sphereKd, sphereKs, expNs);
-		Material torusMat = new Material(torusKa, torusKd, torusKs, expNs);
-		Material ellipMat = new Material(ellipKa, ellipKd, ellipKs, expNs);
-		Material cylinderMat = new Material(cyinderKa, cyinderKd, cyinderKs,
-				expNs);
-		Material boxMat = new Material(boxKa, boxKd, boxKs, expNs);
-		cylinder = new Cylinder(new Point3D(700, 384, 128), cylinderMat,
-				radius * 1.5f, radius, radius * 1.5f, nstep, nstep, viewingVec);
-		sphere = new Sphere(new Point3D(128, 128, 128), radius, sphereMat,
-				nstep, nstep);
-		torus = new Torus(new Point3D(256, 384, 128), torusMat, radius * 0.8f,
-				radius * 1.25f, nstep, nstep);
-		ellipsoid = new Ellipsoid(new Point3D(512, 128, 128), ellipMat,
-				radius * 2, radius, radius, nstep, nstep);
-		box = new Box(new Point3D(900, 128, 128), radius * 2, boxMat, nstep, nstep);
-//				new Box(new Point3D(900, 128, 128), boxMat, radius * 2);
-		stateChange = true;
-		changeLight();
-		// drawSphere(new Point3D(128, 128, 128), sphereMat, 1.5f * radius);
-		// drawTorus(new Point3D(256, 384, 128), torusMat, radius);
-		// drawEllipsoid(new Point3D(512, 128, 128), ellipMat, radius * 2,
-		// radius,
-		// radius);
-		// drawCylinder(new Point3D(700, 384, 128), cylinderMat, radius * 1.5f,
-		// radius, radius * 2.5f);
-		// drawBox(new Point3D(900,128, 128),boxMat,radius*2);
-
-	}
+//	private void initScene() {
+//
+//		clearPixelBuffer();
+//		ColorType torusKa = new ColorType(0.2, 0.2, 0.2);
+//		ColorType torusKd = new ColorType(0.0, 0.5, 0.9);
+//		ColorType torusKs = new ColorType(1.0, 1.0, 1.0);
+//
+//		ColorType sphereKa = new ColorType(0.2, 0.2, 0.2);
+//		ColorType sphereKd = new ColorType(0.5, 0.0, 0.5);
+//		ColorType sphereKs = new ColorType(1.0, 1.0, 1.0);
+//
+//		ColorType ellipKa = new ColorType(0.2, 0.2, 0.2);
+//		ColorType ellipKd = new ColorType(0.5, 0.0, 0.5);
+//		ColorType ellipKs = new ColorType(1.0, 1.0, 1.0);
+//
+//		ColorType cyinderKa = new ColorType(0.2, 0.2, 0.2);
+//		ColorType cyinderKd = new ColorType(0.5, 0.5, 0.5);
+//		ColorType cyinderKs = new ColorType(1.0, 1.0, 1.0);
+//
+//		ColorType boxKa = new ColorType(0.2, 0.2, 0.2);
+//		ColorType boxKd = new ColorType(0.5, 0.0, 0.5);
+//		ColorType boxKs = new ColorType(1.0, 1.0, 1.0);
+//
+//		int radius = 50;
+//		Material sphereMat = new Material(sphereKa, sphereKd, sphereKs, expNs);
+//		Material torusMat = new Material(torusKa, torusKd, torusKs, expNs);
+//		Material ellipMat = new Material(ellipKa, ellipKd, ellipKs, expNs);
+//		Material cylinderMat = new Material(cyinderKa, cyinderKd, cyinderKs,
+//				expNs);
+//		Material boxMat = new Material(boxKa, boxKd, boxKs, expNs);
+//		cylinder = new Cylinder(new Point3D(700, 384, 128), cylinderMat,
+//				radius * 1.5f, radius, radius * 1.5f, nstep, nstep, viewingVec);
+//		sphere = new Sphere(new Point3D(128, 128, 128), radius, sphereMat,
+//				nstep, nstep);
+//		torus = new Torus(new Point3D(512, 128, 128), torusMat, radius * 0.8f,
+//				radius * 1.25f, nstep, nstep);
+//		ellipsoid = new Ellipsoid(new Point3D(256, 384, 128), ellipMat,
+//				radius * 2, radius, radius, nstep, nstep);
+//		box = new Box(new Point3D(900, 128, 128), radius * 2, boxMat, nstep,
+//				nstep);
+//		objList = new ArrayList<Object3D>();
+//		objList.add(cylinder);
+//		objList.add(sphere);
+//		objList.add(torus);
+//		objList.add(ellipsoid);
+//		objList.add(box);
+//		selectedObj = cylinder;
+//		stateChange = true;
+//		changeLight();
+//		// drawSphere(new Point3D(128, 128, 128), sphereMat, 1.5f * radius);
+//		// drawTorus(new Point3D(256, 384, 128), torusMat, radius);
+//		// drawEllipsoid(new Point3D(512, 128, 128), ellipMat, radius * 2,
+//		// radius,
+//		// radius);
+//		// drawCylinder(new Point3D(700, 384, 128), cylinderMat, radius * 1.5f,
+//		// radius, radius * 2.5f);
+//		// drawBox(new Point3D(900,128, 128),boxMat,radius*2);
+//
+//	}
 
 	//
 	//
@@ -538,17 +591,8 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 				lightSources.add(ambientLight);
 			if (toggleSpot)
 				lightSources.add(spotLight);
-			ellipsoid.toggleDiff(toggleDiff);
-			cylinder.toggleDiff(toggleDiff);
-			sphere.toggleDiff(toggleDiff);
-			torus.toggleDiff(toggleDiff);
-			box.toggleDiff(toggleDiff);
-
-			ellipsoid.toggleSpec(toggleSpec);
-			cylinder.toggleSpec(toggleSpec);
-			sphere.toggleSpec(toggleSpec);
-			torus.toggleSpec(toggleSpec);
-			box.toggleSpec(toggleSpec);
+			scene.toggleDiff(toggleDiff);
+			scene.toggleSpec(toggleSpec);
 			stateChange = false;
 		}
 	}

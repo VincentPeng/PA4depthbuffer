@@ -10,6 +10,13 @@ public class InfiniteLight implements LightSource {
 
 		lightColor = colorType;
 	}
+	
+	public InfiniteLight(Vector3D vec, ColorType colorType) {
+		dirVec = vec;
+		dirVec.normalize();
+
+		lightColor = colorType;
+	}
 //	static int a=0;
 	public Vector3D getDirection() {
 		return dirVec;

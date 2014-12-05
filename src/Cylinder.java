@@ -36,8 +36,8 @@ public class Cylinder extends Object3D {
 		
 		Vector3D du = new Vector3D();
 		Vector3D dv = new Vector3D();
-		for(int i=0;i<mesh.uStepTotal;i++) {
-			for(int j=0;j<mesh.vStepTotal;j++) {
+		for(int i=0;i<mesh.vStepTotal;i++) {
+			for(int j=0;j<mesh.uStepTotal;j++) {
 				x=(float)center.x+rx*cosv;
 				y=(float)center.y+ry*sinv;
 				z=(float)center.z+angleu;
@@ -51,18 +51,17 @@ public class Cylinder extends Object3D {
 				dv.y = 0;
 				dv.z = 1;
 				
-				dv.crossProduct(du, mesh.normal[i][j]);
+				du.crossProduct(dv, mesh.normal[i][j]);
 				mesh.normal[i][j].normalize();
-				anglev += anglevStep;
-				cosv = (float)Math.cos(anglev);
-				sinv = (float)Math.sin(anglev);
+				angleu += angleuStep;
 				
 			}
-			anglev = (float)-Math.PI;
+			angleu = (float)umin;
+			
+			anglev += anglevStep;
 			cosv = (float)Math.cos(anglev);
 			sinv = (float)Math.sin(anglev);
 			
-			angleu += angleuStep;
 		}
 	}
 
@@ -101,7 +100,6 @@ public class Cylinder extends Object3D {
 		
 		transposeQua.setMatrix(q.toMatrix());
 		
-		
 		qMatrix.setMatrix(transOut);
 		
 		qMatrix.multiplyMatrix(transposeQua.getTranspose());
@@ -115,13 +113,13 @@ public class Cylinder extends Object3D {
 		
 		vCenter = qMatrix.multiplyPoint(vCenter);
 		
-		sideCurve.mesh.transformMesh(qMatrix , nTrans);
-		
 		this.center.x = Math.round(vCenter.x);
 		this.center.y = Math.round(vCenter.y);
 		this.center.z = Math.round(vCenter.z);
 		
 		sideCurve.center = center;
+		
+		sideCurve.mesh.transformMesh(qMatrix, nTrans);
 	}
 
 	@Override
@@ -136,6 +134,21 @@ public class Cylinder extends Object3D {
 		sideCurve.getMat().setSpecular(isSpec);
 		topCap.getMat().setSpecular(isSpec);
 		bottomCap.getMat().setSpecular(isSpec);
+	}
+
+	@Override
+	public void translate(float x, float y, float z) {
+		center.x += x;
+		center.y += y;
+		center.z += z;
+		
+		TransformMatrix translate = new TransformMatrix();
+		translate.setMatrix(TransformMatrix.translate(x, y, z));
+		TransformMatrix nTrans = new TransformMatrix();
+		
+		sideCurve.mesh.transformMesh(translate, nTrans);
+		topCap.fan.transformFan(translate,nTrans);
+		topCap.fan.transformFan(translate,nTrans);
 	}
 	
 	

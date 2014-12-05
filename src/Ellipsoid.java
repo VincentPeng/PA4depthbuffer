@@ -118,4 +118,18 @@ public class Ellipsoid extends Object3D{
 	public void toggleSpec(boolean isSpec) {
 		body.getMat().setSpecular(isSpec);
 	}
+
+
+	@Override
+	public void translate(float x, float y, float z) {
+		center.x += (int)x;
+		center.y += (int)y;
+		center.z += (int)z;
+		
+		TransformMatrix translate = new TransformMatrix();
+		translate.setMatrix(TransformMatrix.translate(x, y, z));
+		TransformMatrix nTrans = new TransformMatrix();
+		
+		body.mesh.transformMesh(translate, nTrans);
+	}
 }

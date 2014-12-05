@@ -48,20 +48,20 @@ public class Torus extends Object3D{
 				dv.y = -r*sinu*sinv;
 				dv.z = r*cosu;
 				
-				dv.crossProduct(du, mesh.normal[i][j]);
+				du.crossProduct(dv, mesh.normal[i][j]);
 				mesh.normal[i][j].normalize();
-				anglev += anglevStep;
-				cosv = (float)Math.cos(anglev);
-				sinv = (float)Math.sin(anglev);
+				angleu += angleuStep;
+				cosu = (float)Math.cos(angleu);
+				sinu = (float)Math.sin(angleu);
 				
 			}
-			anglev = (float)-Math.PI;
-			cosv = (float)Math.cos(anglev);
-			sinv = (float)Math.sin(anglev);
-			
-			angleu += angleuStep;
+			angleu = (float)-Math.PI;
 			cosu = (float)Math.cos(angleu);
 			sinu = (float)Math.sin(angleu);
+			
+			anglev += anglevStep;
+			cosv = (float)Math.cos(anglev);
+			sinv = (float)Math.sin(anglev);
 		}
 	}
 
@@ -125,5 +125,18 @@ public class Torus extends Object3D{
 	@Override
 	public void toggleSpec(boolean isSpec) {
 		body.getMat().setSpecular(isSpec);
+	}
+
+	@Override
+	public void translate(float x, float y, float z) {
+		center.x += (int)x;
+		center.y += (int)y;
+		center.z += (int)z;
+		
+		TransformMatrix translate = new TransformMatrix();
+		translate.setMatrix(TransformMatrix.translate(x, y, z));
+		TransformMatrix nTrans = new TransformMatrix();
+		
+		body.mesh.transformMesh(translate, nTrans);
 	}
 }

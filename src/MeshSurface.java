@@ -65,7 +65,6 @@ public class MeshSurface implements Surface{
 				triangle_normal.normalize();
 				n0 = n1 = n2 = triangle_normal;
 				
-				triangle_normal = computeTriangleNormal(v0, v1, v2);
 				if (viewVec.dotProduct(triangle_normal) > 0.0) {
 					for (Iterator<LightSource> it = lightSources.iterator(); it
 							.hasNext();) {
@@ -127,8 +126,8 @@ public class MeshSurface implements Surface{
 				p2 = new Point3D((int)v2.x, (int)v2.y, (int)v2.z);
 				
 				n0 = mesh.normal[i][j];
-				n1 = mesh.normal[i][j + 1];
-				n2 = mesh.normal[i + 1][j + 1];
+				n1 = mesh.normal[i+1][j + 1];
+				n2 = mesh.normal[i + 1][j];
 				
 				triangle_normal = computeTriangleNormal(v0, v1, v2);
 				if (viewVec.dotProduct(triangle_normal) > 0.0) {

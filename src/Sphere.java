@@ -18,24 +18,25 @@ public class Sphere extends Object3D {
 	}
 	
 	public void fillMesh() {
+		Mesh3D mesh = body.mesh;
 		float x,y,z;
 		float angleu = (float)-Math.PI/2;
 		float anglev = (float)-Math.PI;
-		float angleuStep = (UMAX-UMIN)/(body.mesh.uStepTotal-1);
-		float anglevStep = (VMAX-VMIN)/(body.mesh.vStepTotal-1);
+		float angleuStep = (UMAX-UMIN)/(mesh.uStepTotal-1);
+		float anglevStep = (VMAX-VMIN)/(mesh.vStepTotal-1);
 		float cosu = (float)Math.cos(angleu);
 		float sinu = (float)Math.sin(angleu);
 		float cosv = (float)Math.cos(anglev);
 		float sinv = (float)Math.sin(anglev);
-		for(int i=0;i<body.mesh.vStepTotal;i++) {
+		for(int i=0;i<mesh.vStepTotal;i++) {
 			
-			for(int j = 0; j<body.mesh.uStepTotal;j++){
+			for(int j = 0; j<mesh.uStepTotal;j++){
 				x = (float)center.x + radius*cosu*cosv;
 				y = (float)center.y + radius*cosu*sinv;
 				z = (float)center.z + radius*sinu;
-				body.mesh.coordinates[i][j] = new Vector3D(x, y, z);
-				body.mesh.normal[i][j] = new Vector3D(cosu*cosv, cosu*sinv, sinu);
-				body.mesh.normal[i][j].normalize();
+				mesh.coordinates[i][j] = new Vector3D(x, y, z);
+				mesh.normal[i][j] = new Vector3D(cosu*cosv, cosu*sinv, sinu);
+				mesh.normal[i][j].normalize();
 				angleu += angleuStep;
 				cosu = (float)Math.cos(angleu);
 				sinu = (float)Math.sin(angleu);
@@ -43,10 +44,10 @@ public class Sphere extends Object3D {
 			angleu = (float)-Math.PI/2;
 			cosu = (float)Math.cos(angleu);
 			sinu = (float)Math.sin(angleu);
+			
 			anglev += anglevStep;
 			cosv = (float)Math.cos(anglev);
 			sinv = (float)Math.sin(anglev);
-			angleu = (float)-Math.PI/2;
 		}
 	}
 	
@@ -66,8 +67,7 @@ public class Sphere extends Object3D {
 	@Override
 	public void drawPhong(ArrayList<LightSource> lightSources,
 			Vector3D viewVec) {
-		// TODO Auto-generated method stub
-		
+		body.drawPhongShading(lightSources, viewVec);
 	}
 
 	public void rotate(Quaternion q , Vector3D rotate_center)
@@ -115,6 +115,20 @@ public class Sphere extends Object3D {
 	public void toggleSpec(boolean isSpec) {
 		body.getMat().setSpecular(isSpec);
 	}
+
+	@Override
+	public void translate(float x, float y, float z) {
+		center.x += (int)x;
+		center.y += (int)y;
+		center.z += (int)z;
+		
+		TransformMatrix translate = new TransformMatrix();
+		translate.setMatrix(TransformMatrix.translate(x, y, z));
+		TransformMatrix nTrans = new TransformMatrix();
+		
+		body.mesh.transformMesh(translate, nTrans);
+		
+	}
 	
 //	public void scale(float scaleFactor)
 //	{
@@ -148,20 +162,6 @@ public class Sphere extends Object3D {
 //		surface.centroid = center;
 //		
 //		surface.mesh.transformMesh(transform, nTrans);
-//		
-//	}
-//	
-//	public void translate(float x , float y , float z)
-//	{
-//		center.x += (int)x;
-//		center.y += (int)y;
-//		center.z += (int)z;
-//		
-//		TransformMatrix translate = new TransformMatrix();
-//		translate.setMatrix(TransformMatrix.translate(x, y, z));
-//		TransformMatrix nTrans = new TransformMatrix();
-//		
-//		surface.mesh.transformMesh(translate, nTrans);
 //		
 //	}
 }

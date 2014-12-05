@@ -42,33 +42,35 @@ public class TriangleFan {
 	}
 	
 	public void rotate(Quaternion q, Vector3D rotate_center) {
-		Quaternion q_inv = q.conjugate();
-		Vector3D vec;
+		TransformMatrix qMatrix = new TransformMatrix();
+		TransformMatrix transposeQua = new TransformMatrix();
+		
+		float [] transIn = TransformMatrix.translate(- rotate_center.x,  - rotate_center.y,  - rotate_center.z);
+		float [] transOut = TransformMatrix.translate(rotate_center.x, rotate_center.y, rotate_center.z);
+		
+		transposeQua.setMatrix(q.toMatrix());
+		
+		qMatrix.setMatrix(transOut);
+		
+		qMatrix.multiplyMatrix(transposeQua.getTranspose());
+	
+		qMatrix.multiplyMatrix(transIn);
+		
+		TransformMatrix nTrans = new TransformMatrix();
+		nTrans.setMatrix(transposeQua.getTranspose());
+		transformFan(qMatrix, nTrans);
 
-		Quaternion p;
-
-		for (int i = 0; i < stepTotal; ++i) {
-			// apply pivot rotation to vertices, given center point
-			p = new Quaternion((float) 0.0, border[i].minus(rotate_center));
-			p = q.multiply(p);
-			p = p.multiply(q_inv);
-			vec = p.get_v();
-			border[i] = vec.plus(rotate_center);
-
+	}
+	
+	public void transformFan(TransformMatrix vTrans, TransformMatrix nTrans)
+	{
+		for(int i = 0; i < stepTotal; i++)
+		{
+			border[i] = vTrans.multiplyPoint(border[i]);
 		}
-		// rotate the normals
-		p = new Quaternion((float) 0.0, normal);
-		p = q.multiply(p);
-		p = p.multiply(q_inv);
-		normal = p.get_v();
-
-		// rotate the center
-		p = new Quaternion((float) 0.0, center.minus(rotate_center));
-		p = q.multiply(p);
-		p = p.multiply(q_inv);
-		vec = p.get_v();
-		center = vec.plus(rotate_center);
-
+		this.center = vTrans.multiplyPoint(center);
+		normal = nTrans.multiplyPoint(normal);
+		normal.normalize();
 	}
 
 	
