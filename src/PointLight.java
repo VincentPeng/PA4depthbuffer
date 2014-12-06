@@ -52,4 +52,10 @@ public class PointLight implements LightSource {
 		p.c.b = Math.min(p.c.b, 1);
 	}
 
+	@Override
+	public String getName() {
+		return "point light";
+	}
+
+
 }

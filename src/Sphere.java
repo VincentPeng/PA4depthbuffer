@@ -129,39 +129,43 @@ public class Sphere extends Object3D {
 		body.mesh.transformMesh(translate, nTrans);
 		
 	}
-	
-//	public void scale(float scaleFactor)
-//	{
-//		radius *= scaleFactor;
-//
-//		TransformMatrix transIn = new TransformMatrix();
-//		transIn.setMatrix(TransformMatrix.translate(- this.center.x, - this.center.y,  - this.center.z));
-//		TransformMatrix transOut = new TransformMatrix();
-//		transOut.setMatrix(TransformMatrix.translate( this.center.x, this.center.y, this.center.z));
-//		
-//		TransformMatrix scale = new TransformMatrix();
-//		scale.setMatrix(TransformMatrix.scale(scaleFactor , scaleFactor , scaleFactor));
-//		
-//		TransformMatrix transform = new TransformMatrix();
-//		transform.setMatrix(transOut.getMatrix());
-//		transform.multiplyMatrix(scale.getMatrix());
-//		transform.multiplyMatrix(transIn.getMatrix());
-//		
-//		TransformMatrix nTrans = new TransformMatrix();
-//		
-//		Vector3D vCenter = new Vector3D(this.center.x , this.center.y , this.center.z);
-//		
-//		vCenter = transform.multiplyPoint(vCenter);
-//		
-//		surface.mesh.transformMesh(transform , nTrans);
-//		
-//		this.center.x = Math.round(vCenter.x);
-//		this.center.y = Math.round(vCenter.y);
-//		this.center.z = Math.round(vCenter.z);
-//		
-//		surface.centroid = center;
-//		
-//		surface.mesh.transformMesh(transform, nTrans);
-//		
-//	}
+
+	@Override
+	public void scale(float scaleFactor) {
+		radius *= scaleFactor;
+
+		TransformMatrix transIn = new TransformMatrix();
+		transIn.setMatrix(TransformMatrix.translate(- this.center.x, - this.center.y,  - this.center.z));
+		TransformMatrix transOut = new TransformMatrix();
+		transOut.setMatrix(TransformMatrix.translate( this.center.x, this.center.y, this.center.z));
+		
+		TransformMatrix scale = new TransformMatrix();
+		scale.setMatrix(TransformMatrix.scale(scaleFactor , scaleFactor , scaleFactor));
+		
+		TransformMatrix transform = new TransformMatrix();
+		transform.setMatrix(transOut.getMatrix());
+		transform.multiplyMatrix(scale.getMatrix());
+		transform.multiplyMatrix(transIn.getMatrix());
+		
+		TransformMatrix nTrans = new TransformMatrix();
+		
+		Vector3D vCenter = new Vector3D(this.center.x , this.center.y , this.center.z);
+		
+		vCenter = transform.multiplyPoint(vCenter);
+		
+		body.mesh.transformMesh(transform , nTrans);
+		
+		this.center.x = Math.round(vCenter.x);
+		this.center.y = Math.round(vCenter.y);
+		this.center.z = Math.round(vCenter.z);
+		
+		body.center = center;
+		
+		body.mesh.transformMesh(transform, nTrans);
+	}
+
+	@Override
+	public String getName() {
+		return "sphere";
+	}
 }

@@ -25,5 +25,12 @@ public class AmbientLight implements LightSource {
 		p.c.g = Math.min(p.c.g, 1);
 		p.c.b = Math.min(p.c.b, 1);
 	}
+	
+
+	@Override
+	public String getName() {
+		return "ambient light";
+	}
+	
 
 }

@@ -54,7 +54,6 @@ public class InfiniteLight implements LightSource {
 				}
 			}
 				
-				
 			res.r = Math.min(res.r, 1);
 			res.g = Math.min(res.g, 1);
 			res.b = Math.min(res.b, 1);
@@ -68,4 +67,10 @@ public class InfiniteLight implements LightSource {
 		p.c.g = Math.min(p.c.g, 1);
 		p.c.b = Math.min(p.c.b, 1);
 	}
+
+	@Override
+	public String getName() {
+		return "infinite light";
+	}
+
 }

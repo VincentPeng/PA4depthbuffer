@@ -132,4 +132,35 @@ public class Ellipsoid extends Object3D{
 		
 		body.mesh.transformMesh(translate, nTrans);
 	}
+
+
+	@Override
+	public void scale(float scaleFactor) {
+		rx *= scaleFactor;
+		ry *= scaleFactor;
+		rz *= scaleFactor;
+		
+		TransformMatrix transIn = new TransformMatrix();
+		transIn.setMatrix(TransformMatrix.translate(- this.center.x, - this.center.y,  - this.center.z));
+		TransformMatrix transOut = new TransformMatrix();
+		transOut.setMatrix(TransformMatrix.translate( this.center.x, this.center.y, this.center.z));
+		
+		TransformMatrix scale = new TransformMatrix();
+		scale.setMatrix(TransformMatrix.scale(scaleFactor , scaleFactor , scaleFactor));
+		
+		TransformMatrix transform = new TransformMatrix();
+		transform.setMatrix(transOut.getMatrix());
+		transform.multiplyMatrix(scale.getMatrix());
+		transform.multiplyMatrix(transIn.getMatrix());
+		
+		TransformMatrix nTrans = new TransformMatrix();
+		
+		body.mesh.transformMesh(transform, nTrans);
+	}
+
+
+	@Override
+	public String getName() {
+		return "ellipsoid";
+	}
 }

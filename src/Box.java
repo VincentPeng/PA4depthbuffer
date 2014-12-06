@@ -9,21 +9,21 @@ public class Box extends Object3D {
 	Point3D leftCenter;
 	Point3D rightCenter;
 	Point3D frontCenter;
-	Point3D rearCenter;
+	Point3D backCenter;
 	
 	public MeshSurface topSurface;
 	public MeshSurface downSurface;
 	public MeshSurface leftSurface;
 	public MeshSurface rightSurface;
 	public MeshSurface frontSurface;
-	public MeshSurface rearSurface;
+	public MeshSurface backSurface;
 	
 	Vector3D topNormal;
 	Vector3D downNormal;
 	Vector3D leftNormal;
 	Vector3D rightNormal;
 	Vector3D frontNormal;
-	Vector3D rearNormal;
+	Vector3D backNormal;
 	
 	
 	private float edge;
@@ -38,21 +38,21 @@ public class Box extends Object3D {
 		leftCenter = new Point3D (center.x - (int)(edge / 2) , center.y , center.z );
 		rightCenter = new Point3D (center.x + (int)(edge / 2) , center.y , center.z);
 		frontCenter = new Point3D (center.x , center.y , center.z + (int)(edge / 2));
-		rearCenter = new Point3D (center.x , center.y , center.z - (int)(edge / 2));
+		backCenter = new Point3D (center.x , center.y , center.z - (int)(edge / 2));
 		
 		topSurface = new MeshSurface(topCenter , mat , vStepTotal , uStepTotal);
 		downSurface = new MeshSurface(downCenter , mat , vStepTotal , uStepTotal);
 		leftSurface = new MeshSurface(leftCenter , mat , vStepTotal , uStepTotal);
 		rightSurface = new MeshSurface(rightCenter , mat , vStepTotal , uStepTotal);
 		frontSurface = new MeshSurface(frontCenter , mat , vStepTotal , uStepTotal);
-		rearSurface = new MeshSurface(rearCenter , mat , vStepTotal , uStepTotal);
+		backSurface = new MeshSurface(backCenter , mat , vStepTotal , uStepTotal);
 	
 		topNormal = new Vector3D(0 , 1 , 0);
 		downNormal = new Vector3D(0 , -1 , 0);
 		leftNormal = new Vector3D(-1 , 0 , 0);
 		rightNormal = new Vector3D(1 , 0 , 0);
 		frontNormal = new Vector3D(0 , 0 , 1);
-		rearNormal = new Vector3D(0 , 0 , -1);
+		backNormal = new Vector3D(0 , 0 , -1);
 		
 		fillMesh();
 		
@@ -65,7 +65,7 @@ public class Box extends Object3D {
 		leftSurface.drawFlatShading(lightSources, viewVec);
 		rightSurface.drawFlatShading(lightSources, viewVec);
 		frontSurface.drawFlatShading(lightSources, viewVec);
-		rearSurface.drawFlatShading(lightSources, viewVec);
+		backSurface.drawFlatShading(lightSources, viewVec);
 	}
 
 	@Override
@@ -76,7 +76,7 @@ public class Box extends Object3D {
 		leftSurface.drawGouraudShading(lightSources, viewVec);
 		rightSurface.drawGouraudShading(lightSources, viewVec);
 		frontSurface.drawGouraudShading(lightSources, viewVec);
-		rearSurface.drawGouraudShading(lightSources, viewVec);
+		backSurface.drawGouraudShading(lightSources, viewVec);
 	}
 
 	@Override
@@ -86,7 +86,7 @@ public class Box extends Object3D {
 		leftSurface.drawPhongShading(lightSources, viewVec);
 		rightSurface.drawPhongShading(lightSources, viewVec);
 		frontSurface.drawPhongShading(lightSources, viewVec);
-		rearSurface.drawPhongShading(lightSources, viewVec);
+		backSurface.drawPhongShading(lightSources, viewVec);
 	}
 
 	@Override
@@ -96,7 +96,7 @@ public class Box extends Object3D {
 		leftSurface.getMat().setDiffuse(isDiff);
 		rightSurface.getMat().setDiffuse(isDiff);
 		frontSurface.getMat().setDiffuse(isDiff);
-		rearSurface.getMat().setDiffuse(isDiff);
+		backSurface.getMat().setDiffuse(isDiff);
 	}
 
 	@Override
@@ -106,7 +106,7 @@ public class Box extends Object3D {
 		leftSurface.getMat().setSpecular(isSpec);
 		rightSurface.getMat().setSpecular(isSpec);
 		frontSurface.getMat().setSpecular(isSpec);
-		rearSurface.getMat().setSpecular(isSpec);
+		backSurface.getMat().setSpecular(isSpec);
 	}
 	
 	private void fillMesh()
@@ -145,18 +145,18 @@ public class Box extends Object3D {
 		int i , j;
 		
 		float h , w;
-		float dh = edge / (float)( rearSurface.mesh.vStepTotal - 1);
-		float dw = edge / (float)( rearSurface.mesh.uStepTotal - 1);
+		float dh = edge / (float)( backSurface.mesh.vStepTotal - 1);
+		float dw = edge / (float)( backSurface.mesh.uStepTotal - 1);
 		
-		for(i = 0 , h =  - (edge / 2); i < rearSurface.mesh.vStepTotal ; i++ , h += dh)
+		for(i = 0 , h =  - (edge / 2); i < backSurface.mesh.vStepTotal ; i++ , h += dh)
 		{
-			for(j = 0 , w = -( edge / 2); j < rearSurface.mesh.uStepTotal ; j++ , w += dw)
+			for(j = 0 , w = -( edge / 2); j < backSurface.mesh.uStepTotal ; j++ , w += dw)
 			{
-				rearSurface.mesh.coordinates[i][j].x = (float)((float)(rearCenter.x) + w );
-				rearSurface.mesh.coordinates[i][j].y = (float)((float)(rearCenter.y) + h );
-				rearSurface.mesh.coordinates[i][j].z = (float)rearCenter.z;
+				backSurface.mesh.coordinates[i][j].x = (float)((float)(backCenter.x) + w );
+				backSurface.mesh.coordinates[i][j].y = (float)((float)(backCenter.y) + h );
+				backSurface.mesh.coordinates[i][j].z = (float)backCenter.z;
 				
-				rearSurface.mesh.normal[i][j] = rearNormal;
+				backSurface.mesh.normal[i][j] = backNormal;
 			}
 		}
 	}
@@ -268,7 +268,7 @@ public class Box extends Object3D {
 		leftSurface.mesh.transformMesh(qMatrix , nTrans);
 		rightSurface.mesh.transformMesh(qMatrix , nTrans);
 		frontSurface.mesh.transformMesh(qMatrix , nTrans);
-		rearSurface.mesh.transformMesh(qMatrix , nTrans);
+		backSurface.mesh.transformMesh(qMatrix , nTrans);
 		
 		Vector3D tmp = new Vector3D(center.x , center.y , center.z);
 		tmp = qMatrix.multiplyPoint(tmp);
@@ -295,9 +295,51 @@ public class Box extends Object3D {
 		leftSurface.mesh.transformMesh(translate, nTrans);
 		rightSurface.mesh.transformMesh(translate, nTrans);
 		frontSurface.mesh.transformMesh(translate, nTrans);
-		rearSurface.mesh.transformMesh(translate, nTrans);
+		backSurface.mesh.transformMesh(translate, nTrans);
 		
 		
+	}
+
+	@Override
+	public void scale(float scaleFactor) {
+		edge *= scaleFactor;
+		TransformMatrix transIn = new TransformMatrix();
+		transIn.setMatrix(TransformMatrix.translate(- this.center.x, - this.center.y,  - this.center.z));
+		TransformMatrix transOut = new TransformMatrix();
+		transOut.setMatrix(TransformMatrix.translate( this.center.x, this.center.y, this.center.z));
+		
+		TransformMatrix scale = new TransformMatrix();
+		scale.setMatrix(TransformMatrix.scale(scaleFactor , scaleFactor , scaleFactor));
+		
+		TransformMatrix transform = new TransformMatrix();
+		transform.setMatrix(transOut.getMatrix());
+		transform.multiplyMatrix(scale.getMatrix());
+		transform.multiplyMatrix(transIn.getMatrix());
+		
+		TransformMatrix nTrans = new TransformMatrix();
+		
+		//top surface
+		topSurface.mesh.transformMesh(transform, nTrans);
+		
+		//down surface
+		downSurface.mesh.transformMesh(transform, nTrans);
+		
+		//left surface
+		leftSurface.mesh.transformMesh(transform, nTrans);
+		
+		//right surface
+		rightSurface.mesh.transformMesh(transform, nTrans);
+		
+		//front surface			
+		frontSurface.mesh.transformMesh(transform, nTrans);
+				
+		//rear surface		
+		backSurface.mesh.transformMesh(transform, nTrans);
+	}
+
+	@Override
+	public String getName() {
+		return "box";
 	}
 
 }

@@ -67,4 +67,9 @@ public class SpotLight implements LightSource {
 		
 	}
 
+	@Override
+	public String getName() {
+		return "spot light";
+	}
+
 }

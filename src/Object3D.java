@@ -38,6 +38,8 @@ public abstract class Object3D {
 	public abstract void toggleSpec(boolean isSpec);
 	public abstract void rotate(Quaternion q, Vector3D rotae_center);
 	public abstract void translate(float x , float y , float z);
+	public abstract void scale(float scaleFactor);
+	public abstract String getName();
 
 	public Vector3D getCenter() {
 		return new Vector3D(center.x,center.y,center.z);

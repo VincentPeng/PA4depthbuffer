@@ -168,7 +168,6 @@ public class Triangle {
 	{
 		Edge spanEdge = new Edge(p0 , p1);
 		
-		//TODO: may have bug
 		int startX = (int)p0.x; 
 		int endX = (int)p1.x;
 		

@@ -36,20 +36,10 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 	private int last_x = 0;
 	private int last_y = 0;
 	boolean rotate_world;
-	private int nstep = 48;
-	private LightSource infiniteLight;
-	private LightSource spotLight;
-	private LightSource pointLight;
-	private LightSource ambientLight;
-
-	private boolean stateChange;
-	private boolean toggleInfi = true;
-	private boolean toggleSpot = false;
-	private boolean togglePoint = false;
 	private boolean toggleSpec = true;
 	private boolean toggleDiff = true;
-	private boolean toggleAmb = true;
-	private ArrayList<LightSource> lightSources;
+	
+	
 	// exponent for specular light
 	private int expNs = 5;
 	private Vector3D viewing_center = new Vector3D(
@@ -60,17 +50,11 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 																// controlled by
 																// mouse
 	public static DepthBuffer depthBuffer;
-//
-//	private Cylinder cylinder;
-//	private Ellipsoid ellipsoid;
-//	private Box box;
-//	private Torus torus;
-//	private Sphere sphere;
 
+	
+	
 	private char renderMethod = 'F';
 	private boolean toggleCameraOrOb = true;
-	private Object3D selectedObj;
-	private ArrayList<Object3D> objList;
 	private int sceneNum = 0;
 	private Scene scene;
 
@@ -98,11 +82,6 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 				DEFAULT_WINDOW_HEIGHT);
 
 		ColorType lightColor = new ColorType(1, 1, 1);
-		infiniteLight = new InfiniteLight(0, 1, 1, lightColor);
-		pointLight = new PointLight(lightColor, new Point3D(200, 200, 300));
-		spotLight = new SpotLight(new Point3D(400, 200, 300), new Vector3D(1,
-				0, 1), lightColor, Math.PI / 3);
-		ambientLight = new AmbientLight(lightColor);
 
 		scene = new Scene();
 	}
@@ -215,7 +194,7 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 		// change the 5 scenes which to be drawn
 		case 't':
 		case 'T':
-			sceneNum = (sceneNum+1)%5;
+			sceneNum = (sceneNum+1)%8;
 			scene.turnOnScene(sceneNum);
 			System.out.println("turn on scene num:" + sceneNum);
 			break;
@@ -232,20 +211,18 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 		case 'S':
 		case 's':
 			toggleSpec = !toggleSpec;
-			stateChange = true;
+			scene.toggleSpec(toggleSpec);
 			System.out.println("Specular=" + toggleSpec);
 			break;
 		case 'D':
 		case 'd':
 			toggleDiff = !toggleDiff;
-			stateChange = true;
+			scene.toggleDiff(toggleDiff);
 			System.out.println("Diffuse=" + toggleDiff);
 			break;
 		case 'A':
 		case 'a':
-			toggleAmb = !toggleAmb;
-			stateChange = true;
-			System.out.println("Ambient=" + toggleAmb);
+			scene.toggleLight(Scene.AMB_LIGHT);
 			break;
 		// Change the render method to Flat/Gouraud/Phong
 		case 'F':
@@ -263,20 +240,14 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 			renderMethod = key.getKeyChar();
 			System.out.println("Render method : Phong");
 			break;
+		case '0':
+			scene.toggleLight(Scene.INFI_LIGHT);
+			break;
 		case '1':
-			toggleInfi = !toggleInfi;
-			System.out.println("toggleInfi=" + toggleInfi);
-			stateChange = true;
+			scene.toggleLight(Scene.SPOT_LIGHT);
 			break;
 		case '2':
-			togglePoint = !togglePoint;
-			System.out.println("togglePoint=" + togglePoint);
-			stateChange = true;
-			break;
-		case '3':
-			toggleSpot = !toggleSpot;
-			System.out.println("toggleSpot=" + toggleSpot);
-			stateChange = true;
+			scene.toggleLight(Scene.POINT_LIGHT);
 			break;
 		case '+':
 		case '=':
@@ -291,14 +262,10 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 			System.out.println("expNs=" + expNs);
 			break;
 		case '>':
-			if (nstep < 128)
-				nstep *= 2;
-			System.out.println("nstep=" + nstep);
+			scene.scaleObj(1.1f);
 			break;
 		case '<':
-			if (nstep > 8)
-				nstep /= 2;
-			System.out.println("nstep=" + nstep);
+			scene.scaleObj(0.9f);
 			break;
 		default:
 			break;
@@ -362,7 +329,6 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 		byte[] data = dbb.getData();
 
 		gl.glPixelStorei(GL2.GL_UNPACK_ALIGNMENT, 1);
-		changeLight();
 		scene.drawScene(renderMethod);
 		gl.glDrawPixels(buffer.getWidth(), buffer.getHeight(), GL2.GL_BGR,
 				GL2.GL_UNSIGNED_BYTE, ByteBuffer.wrap(data));
@@ -410,190 +376,4 @@ public class PA4 extends JFrame implements GLEventListener, KeyListener,
 
 	}
 
-//	private void initScene() {
-//
-//		clearPixelBuffer();
-//		ColorType torusKa = new ColorType(0.2, 0.2, 0.2);
-//		ColorType torusKd = new ColorType(0.0, 0.5, 0.9);
-//		ColorType torusKs = new ColorType(1.0, 1.0, 1.0);
-//
-//		ColorType sphereKa = new ColorType(0.2, 0.2, 0.2);
-//		ColorType sphereKd = new ColorType(0.5, 0.0, 0.5);
-//		ColorType sphereKs = new ColorType(1.0, 1.0, 1.0);
-//
-//		ColorType ellipKa = new ColorType(0.2, 0.2, 0.2);
-//		ColorType ellipKd = new ColorType(0.5, 0.0, 0.5);
-//		ColorType ellipKs = new ColorType(1.0, 1.0, 1.0);
-//
-//		ColorType cyinderKa = new ColorType(0.2, 0.2, 0.2);
-//		ColorType cyinderKd = new ColorType(0.5, 0.5, 0.5);
-//		ColorType cyinderKs = new ColorType(1.0, 1.0, 1.0);
-//
-//		ColorType boxKa = new ColorType(0.2, 0.2, 0.2);
-//		ColorType boxKd = new ColorType(0.5, 0.0, 0.5);
-//		ColorType boxKs = new ColorType(1.0, 1.0, 1.0);
-//
-//		int radius = 50;
-//		Material sphereMat = new Material(sphereKa, sphereKd, sphereKs, expNs);
-//		Material torusMat = new Material(torusKa, torusKd, torusKs, expNs);
-//		Material ellipMat = new Material(ellipKa, ellipKd, ellipKs, expNs);
-//		Material cylinderMat = new Material(cyinderKa, cyinderKd, cyinderKs,
-//				expNs);
-//		Material boxMat = new Material(boxKa, boxKd, boxKs, expNs);
-//		cylinder = new Cylinder(new Point3D(700, 384, 128), cylinderMat,
-//				radius * 1.5f, radius, radius * 1.5f, nstep, nstep, viewingVec);
-//		sphere = new Sphere(new Point3D(128, 128, 128), radius, sphereMat,
-//				nstep, nstep);
-//		torus = new Torus(new Point3D(512, 128, 128), torusMat, radius * 0.8f,
-//				radius * 1.25f, nstep, nstep);
-//		ellipsoid = new Ellipsoid(new Point3D(256, 384, 128), ellipMat,
-//				radius * 2, radius, radius, nstep, nstep);
-//		box = new Box(new Point3D(900, 128, 128), radius * 2, boxMat, nstep,
-//				nstep);
-//		objList = new ArrayList<Object3D>();
-//		objList.add(cylinder);
-//		objList.add(sphere);
-//		objList.add(torus);
-//		objList.add(ellipsoid);
-//		objList.add(box);
-//		selectedObj = cylinder;
-//		stateChange = true;
-//		changeLight();
-//		// drawSphere(new Point3D(128, 128, 128), sphereMat, 1.5f * radius);
-//		// drawTorus(new Point3D(256, 384, 128), torusMat, radius);
-//		// drawEllipsoid(new Point3D(512, 128, 128), ellipMat, radius * 2,
-//		// radius,
-//		// radius);
-//		// drawCylinder(new Point3D(700, 384, 128), cylinderMat, radius * 1.5f,
-//		// radius, radius * 2.5f);
-//		// drawBox(new Point3D(900,128, 128),boxMat,radius*2);
-//
-//	}
-
-	//
-	//
-	// private void drawSphere(Point3D center, Material mat, float radius) {
-	// Sphere sphere = new Sphere(center, radius, mat, nstep, nstep);
-	// sphere.mesh.rotateMesh(viewing_quaternion, viewing_center);
-	// drawMesh(sphere);
-	// }
-	//
-	// private void drawTorus(Point3D center, Material mat, float radius) {
-	// Torus torus = new Torus(center, mat, radius * 0.8f, radius * 1.25f,
-	// nstep, nstep);
-	// torus.mesh.rotateMesh(viewing_quaternion, viewing_center);
-	// drawMesh(torus);
-	// }
-	//
-	// private void drawEllipsoid(Point3D center, Material mat, float rx,
-	// float ry, float rz) {
-	// Ellipsoid ellipsoid = new Ellipsoid(center, mat, rx, ry, rz, nstep,
-	// nstep);
-	// ellipsoid.mesh.rotateMesh(viewing_quaternion, viewing_center);
-	// drawMesh(ellipsoid);
-	// }
-
-	// private void drawCylinder(Point3D center, Material mat, float rx, float
-	// ry,
-	// float umax) {
-	//
-	// cylinder.draw(lightSources, viewing_center, renderMethod);
-	// }
-	//
-	//
-	// private void drawBox(Point3D center, Material mat, float edge) {
-	// Box box = new Box(center, mat, edge);
-	// box.mesh.rotateMesh(viewing_quaternion, viewing_center);
-	// drawMesh(box);
-	// }
-	//
-	// private void drawMesh(Object3D ob) {
-	// Vector3D triangle_normal = new Vector3D();
-	// Mesh3D mesh = ob.mesh;
-	// int stepu = mesh.uStepTotal;
-	// int stepv = mesh.vStepTotal;
-	// Point2D[] tri = { new Point2D(), new Point2D(), new Point2D() };
-	// Vector3D v0, v1, v2, n0, n1, n2;
-	// Material mat = ob.getMaterial();
-	// for (int i = 0; i < stepv - 1; i++) {
-	// for (int j = 0; j < stepu - 1; j++) {
-	// // TODO: add depthBuffer
-	// v0 = mesh.coordinates[i][j];
-	// v1 = mesh.coordinates[i][j + 1];
-	// v2 = mesh.coordinates[i + 1][j + 1];
-	//
-	// triangle_normal = computeTriangleNormal(v0, v1, v2);
-	// if (viewingVec.dotProduct(triangle_normal) > 0.0) {
-	// if (doSmoothShading && !(ob instanceof Box) ) {
-	// n0 = mesh.normal[i][j];
-	// n1 = mesh.normal[i][j + 1];
-	// n2 = mesh.normal[i + 1][j + 1];
-	// tri[0].c = light.applyLight(mat, viewingVec, n0);
-	// tri[1].c = light.applyLight(mat, viewingVec, n1);
-	// tri[2].c = light.applyLight(mat, viewingVec, n2);
-	// } else {
-	// n0 = n1 = n2 = triangle_normal;
-	// tri[0].c = tri[1].c = tri[2].c = light.applyLight(mat,
-	// viewingVec, triangle_normal);
-	// }
-	// tri[0].x = (int) v0.x;
-	// tri[0].y = (int) v0.y;
-	// tri[1].x = (int) v1.x;
-	// tri[1].y = (int) v1.y;
-	// tri[2].x = (int) v2.x;
-	// tri[2].y = (int) v2.y;
-	//
-	// SketchBase.drawTriangle(buffer, tri[0], tri[1], tri[2],
-	// doSmoothShading);
-	// }
-	//
-	// v0 = mesh.coordinates[i][j];
-	// v1 = mesh.coordinates[i + 1][j + 1];
-	// v2 = mesh.coordinates[i + 1][j];
-	//
-	// triangle_normal = computeTriangleNormal(v0, v1, v2);
-	// if (viewingVec.dotProduct(triangle_normal) > 0.0) {
-	// if (doSmoothShading && !(ob instanceof Box)) {
-	// n0 = mesh.normal[i][j];
-	// n1 = mesh.normal[i + 1][j + 1];
-	// n2 = mesh.normal[i + 1][j];
-	// tri[0].c = light.applyLight(mat, viewingVec, n0);
-	// tri[1].c = light.applyLight(mat, viewingVec, n1);
-	// tri[2].c = light.applyLight(mat, viewingVec, n2);
-	// } else {
-	// n0 = n1 = n2 = triangle_normal;
-	// tri[0].c = tri[1].c = tri[2].c = light.applyLight(mat,
-	// viewingVec, triangle_normal);
-	// }
-	//
-	// tri[0].x = (int) v0.x;
-	// tri[0].y = (int) v0.y;
-	// tri[1].x = (int) v1.x;
-	// tri[1].y = (int) v1.y;
-	// tri[2].x = (int) v2.x;
-	// tri[2].y = (int) v2.y;
-	//
-	// SketchBase.drawTriangle(buffer, tri[0], tri[1], tri[2],
-	// doSmoothShading);
-	// }
-	// }
-	// }
-	// }
-
-	private void changeLight() {
-		if (stateChange) {
-			lightSources = new ArrayList<LightSource>();
-			if (toggleInfi)
-				lightSources.add(infiniteLight);
-			if (togglePoint)
-				lightSources.add(pointLight);
-			if (toggleAmb)
-				lightSources.add(ambientLight);
-			if (toggleSpot)
-				lightSources.add(spotLight);
-			scene.toggleDiff(toggleDiff);
-			scene.toggleSpec(toggleSpec);
-			stateChange = false;
-		}
-	}
 }
